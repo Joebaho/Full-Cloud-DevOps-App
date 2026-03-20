@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-nginx-config
+data:
+  default.conf: |
+    server {
+      listen 80;
+
+      location /auth/ {
+        proxy_pass http://auth/;
+      }
+
+      location /cart/ {
+        proxy_pass http://cart/;
+      }
+
+      location /payment/ {
+        proxy_pass http://payment/;
+      }
+
+      location /healthz {
+        return 200 "ok";
+      }
+    }

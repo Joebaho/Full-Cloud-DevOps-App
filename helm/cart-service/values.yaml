@@ -1,0 +1,21 @@
+replicaCount: 2
+
+image:
+  repository: cart-service
+  tag: latest
+  pullPolicy: Always
+
+service:
+  port: 80
+  targetPort: 8080
+
+env:
+  PAYMENT_URL: http://payment
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
