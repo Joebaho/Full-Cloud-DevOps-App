@@ -13,10 +13,7 @@ tf_init() {
   bash "$ROOT_DIR/scripts/terraform_init.sh" "$1"
 }
 
-tf_init "$ROOT_DIR/infrastructure/terraform/ecr"
-pushd "$ROOT_DIR/infrastructure/terraform/ecr" >/dev/null
-terraform apply -auto-approve -var="region=$AWS_REGION"
-popd >/dev/null
+bash "$ROOT_DIR/scripts/apply_ecr.sh"
 
 tf_init "$ROOT_DIR/infrastructure/terraform/vpc"
 pushd "$ROOT_DIR/infrastructure/terraform/vpc" >/dev/null
