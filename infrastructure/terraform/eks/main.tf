@@ -34,6 +34,8 @@ module "eks" {
 
   cluster_name    = "devops-eks-cluster"
   cluster_version = "1.29"
+  cluster_endpoint_public_access  = true
+  cluster_endpoint_private_access = false
 
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
