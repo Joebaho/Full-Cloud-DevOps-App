@@ -37,7 +37,7 @@ jobs:
         env:
           AWS_REGION: ${{ secrets.AWS_REGION || 'us-west-2' }}
           TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET || 'baho-backup-bucket' }}
-          TF_LOCK_TABLE: ${{ secrets.TF_LOCK_TABLE || 'full-devops-table' }}
+          TF_LOCK_TABLE: ${{ secrets.TF_LOCK_TABLE }}
           TF_STATE_REGION: ${{ secrets.TF_STATE_REGION || secrets.AWS_REGION || 'us-west-2' }}
           TF_STATE_KEY_PREFIX: ${{ secrets.TF_STATE_KEY_PREFIX || 'full-devops-state' }}
           ZONE_NAME: ${{ secrets.ROUTE53_ZONE_NAME || 'example.com' }}

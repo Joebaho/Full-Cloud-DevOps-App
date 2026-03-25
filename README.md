@@ -25,16 +25,17 @@ This repository is a small three-service demo deployed on AWS with Terraform, EK
 
 ## 1. Configure the existing remote Terraform state
 
-This project is already configured to use your existing backend in `us-west-2`:
+This project is already configured to use your existing S3 backend in `us-west-2`:
 
 ```bash
 baho-backup-bucket/full-devops-state
 ```
 
-with DynamoDB locking in:
+Optional DynamoDB locking can be enabled with a table that uses:
 
 ```bash
-full-devops-table
+partition key: LockID
+type: String
 ```
 
 Export these values for local runs:
@@ -42,11 +43,16 @@ Export these values for local runs:
 ```bash
 export AWS_REGION=us-west-2
 export TF_STATE_BUCKET="baho-backup-bucket"
-export TF_LOCK_TABLE="full-devops-table"
 export TF_STATE_REGION="$AWS_REGION"
 export TF_STATE_KEY_PREFIX="full-devops-state"
 export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 export MANAGE_ROUTE53=false
+```
+
+If you have a compatible DynamoDB lock table, also export:
+
+```bash
+export TF_LOCK_TABLE="<terraform-lock-table>"
 ```
 
 ## 2. Build and push images
@@ -113,9 +119,9 @@ Set these repository secrets:
 Optional secrets if you want to override the built-in backend defaults:
 
 - `TF_STATE_BUCKET`
-- `TF_LOCK_TABLE`
 - `TF_STATE_REGION`
 - `TF_STATE_KEY_PREFIX`
+- `TF_LOCK_TABLE` (only if the table uses `LockID` as a String partition key)
 
 Available workflows:
 
@@ -129,6 +135,7 @@ Available workflows:
 - Pushes to `main` trigger image build first, then deployment automatically through GitHub Actions.
 - The gateway now uses a `LoadBalancer` service, so the default deployment path does not require the AWS Load Balancer Controller.
 - Route53 is disabled by default. Set `MANAGE_ROUTE53=true` only if you want Terraform to create and later destroy a hosted zone.
+- If you enable DynamoDB locking, the lock table must use `LockID` as the partition key with type `String`.
 - Replace placeholder values such as `example.com` and `REPLACE_ME` before using Route53 or ArgoCD in a real AWS account.
 
 ## 👨‍💻 Author
