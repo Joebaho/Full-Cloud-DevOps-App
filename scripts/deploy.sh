@@ -24,11 +24,14 @@ popd >/dev/null
 
 tf_init "$ROOT_DIR/infrastructure/terraform/eks"
 pushd "$ROOT_DIR/infrastructure/terraform/eks" >/dev/null
-terraform apply -auto-approve \
-  -var="region=$AWS_REGION" \
-  -var="vpc_id=$VPC_ID" \
-  -var="subnet_ids=$SUBNETS"
+printf '{\n  "region": "%s",\n  "vpc_id": "%s",\n  "subnet_ids": %s\n}\n' \
+  "$AWS_REGION" \
+  "$VPC_ID" \
+  "$SUBNETS" > runtime.auto.tfvars.json
+
+terraform apply -auto-approve -var-file=runtime.auto.tfvars.json
 CLUSTER_NAME="$(terraform output -raw cluster_name)"
+rm -f runtime.auto.tfvars.json
 popd >/dev/null
 
 aws eks update-kubeconfig --region "$AWS_REGION" --name "$CLUSTER_NAME"

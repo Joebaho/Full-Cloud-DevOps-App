@@ -88,10 +88,13 @@ if [ -d "$ROOT_DIR/infrastructure/terraform/eks" ] && [ -d "$ROOT_DIR/infrastruc
 
   if [ -n "$VPC_ID" ] && [ -n "$SUBNETS" ]; then
     pushd "$ROOT_DIR/infrastructure/terraform/eks" >/dev/null
-    terraform destroy -auto-approve \
-      -var="region=$AWS_REGION" \
-      -var="vpc_id=$VPC_ID" \
-      -var="subnet_ids=$SUBNETS"
+    printf '{\n  "region": "%s",\n  "vpc_id": "%s",\n  "subnet_ids": %s\n}\n' \
+      "$AWS_REGION" \
+      "$VPC_ID" \
+      "$SUBNETS" > runtime.auto.tfvars.json
+
+    terraform destroy -auto-approve -var-file=runtime.auto.tfvars.json
+    rm -f runtime.auto.tfvars.json
     popd >/dev/null
   fi
 fi
