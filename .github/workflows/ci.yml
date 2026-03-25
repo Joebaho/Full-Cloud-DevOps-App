@@ -12,6 +12,14 @@ jobs:
     permissions:
       contents: read
 
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION || 'us-west-2' }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET || 'baho-backup-bucket' }}
+      TF_LOCK_TABLE: ${{ secrets.TF_LOCK_TABLE || 'full-devops-table' }}
+      TF_STATE_REGION: ${{ secrets.TF_STATE_REGION || secrets.AWS_REGION || 'us-west-2' }}
+      TF_STATE_KEY_PREFIX: ${{ secrets.TF_STATE_KEY_PREFIX || 'full-devops-state' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,14 +29,21 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-west-2' }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Create ECR repositories
+        run: |
+          bash scripts/terraform_init.sh infrastructure/terraform/ecr
+          cd infrastructure/terraform/ecr
+          terraform apply -auto-approve -var="region=$AWS_REGION"
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build and push service images
         env:
-          AWS_REGION: ${{ secrets.AWS_REGION || 'us-west-2' }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           IMAGE_TAG: ${{ github.sha }}
         run: bash scripts/build.sh
