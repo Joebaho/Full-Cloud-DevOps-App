@@ -1,0 +1,55 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: 'Type "destroy" to confirm teardown'
+        required: true
+        default: ""
+
+jobs:
+  destroy:
+    if: ${{ github.event.inputs.confirm_destroy == 'destroy' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-west-2' }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Destroy stack
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-west-2' }}
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET || 'baho-backup-bucket' }}
+          TF_LOCK_TABLE: ${{ secrets.TF_LOCK_TABLE || 'full-devops-table' }}
+          TF_STATE_REGION: ${{ secrets.TF_STATE_REGION || secrets.AWS_REGION || 'us-west-2' }}
+          TF_STATE_KEY_PREFIX: ${{ secrets.TF_STATE_KEY_PREFIX || 'full-devops-state' }}
+          ZONE_NAME: ${{ secrets.ROUTE53_ZONE_NAME || 'example.com' }}
+          MANAGE_ROUTE53: ${{ secrets.MANAGE_ROUTE53 || 'false' }}
+        run: bash scripts/destroy.sh
+
+  destroy-not-confirmed:
+    if: ${{ github.event.inputs.confirm_destroy != 'destroy' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Stop workflow
+        run: |
+          echo 'Destroy skipped. Re-run this workflow and type "destroy" in the confirmation field.'
+          exit 1
